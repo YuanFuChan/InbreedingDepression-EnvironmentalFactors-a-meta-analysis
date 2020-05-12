@@ -11,21 +11,72 @@ EnvExp<-read.csv("Ibd_EnvExp_2020.csv",header=T)
 ############################################################################
 ############################################################################
 
-r1<-rma(Effect.sizes,Var,data=EnvExp)
-
-summary(res)
-
+#SECTION 1. Meta-analysis on the affects of environmental factors on inbreeding depression
+# Bayesian randon effect model will be used with article/paper level as a randon effect
+# Uniform prior on the standard deviation of the random effects, for both residual variance (R structure), and study level variance (G structure)
 
 prior <- list(R=list(V = 1e-10, nu = -1), G = list(G1 = list(V = 1e-10, nu = -1)))
 
-m1<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID+~, prior=prior,nitt = 110000,burnin=10000,thin=100)
+############################################################################
+############################################################################
+
+## Analyisi 1: Global meta-analysis
+
+# Random effects meta-analysis with random effects for study/article level
+
+m1<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
 summary(m1)
 
-m2<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+## Analysis 2: Meta-analysis on the effects of inbreeding coefficient on the effect siezes
+
+m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
 summary(m2)
 
-m3<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient+Fitness_class+Taxonomic.group,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+###Results
+####                post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)      -0.04659 -0.12977  0.03741     1121  0.264    
+###Ibd_coefficient  -0.31808 -0.47000 -0.16254     1000 <0.001 ***
+### pMCMC less than 0.001, inbreeding coefficient has significant effect on the effect sizes
+
+## Analysis 3: Meta-analysis on the effects of inbreeding coefficient and stress levels on the effect siezes
+
+m3<-MCMCglmm(Effect.sizes~Ibd_coefficient+Stress_lv,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
 summary(m3)
 
-m4<-MCMCglmm(Effect.sizes~Taxonomic.group,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+###Results
+###                 post.mean   l-95% CI   u-95% CI eff.samp  pMCMC    
+###(Intercept)     -0.0480950 -0.1249201  0.0380551     1000  0.258    
+###Ibd_coefficient -0.3138710 -0.4598120 -0.1574043     1000 <0.001 ***
+###Stress_lv        0.0006506  0.0004688  0.0008264     1000 <0.001 ***
+### Stress level (positive) and inbreeding coefficient (negative) have significant effects on the effect sizes
+
+
+## Analysis 4: Meta-analysis on the effects of inbreeding coefficient, stress levels and stress types on the effect siezes
+
+m4<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
 summary(m4)
+
+###Results
+### Only 2 stress types' (soil and host species) credible intervals cross 0 and have significant p values 
+### Stres type doesn't have effect on inbreeding depression
+
+## Analysis 5: Meta-analysis on the effects of inbreeding coefficient, stress levels and taxons on the effect siezes
+
+m5<-MCMCglmm(Effect.sizes~Stress_lv+Taxonomic.group+Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m5)
+
+
+###                           post.mean   l-95% CI   u-95% CI eff.samp  pMCMC    
+###(Intercept)               -0.0556136 -0.2945220  0.1801351     1000  0.638    
+###Stress_lv                  0.0006557  0.0004904  0.0008171     1000 <0.001 ***
+###Taxonomic.groupEchinoderm -0.0544736 -0.6989364  0.5664229     1000  0.862    
+###Taxonomic.groupFish       -0.1990267 -0.5547497  0.1220521     1000  0.248    
+###Taxonomic.groupInsect      0.0647992 -0.1547570  0.2941014     1000  0.598    
+###Taxonomic.groupMammal      0.0232154 -1.0123370  1.0296293     1165  0.944    
+###Taxonomic.groupMollusc     0.0038735 -0.2291383  0.2386106     1000  0.956    
+###Taxonomic.groupPlant      -0.0039048 -0.2397607  0.2231821     1000  0.990    
+###Ibd_coefficient           -0.3361589 -0.4905202 -0.1871392     1133 <0.001 ***
+### Taxonomic group doesn't have effect on inbreeding depression
