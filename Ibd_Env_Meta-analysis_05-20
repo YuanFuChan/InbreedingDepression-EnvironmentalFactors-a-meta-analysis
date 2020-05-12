@@ -1,0 +1,31 @@
+#############################################################################
+#############################################################################
+
+# load necessary libraries
+library(metafor)
+library(MCMCglmm)
+
+setwd("/Directory/path/to/working_directory")
+EnvExp<-read.csv("Ibd_EnvExp_2020.csv",header=T)
+
+############################################################################
+############################################################################
+
+r1<-rma(Effect.sizes,Var,data=EnvExp)
+
+summary(res)
+
+
+prior <- list(R=list(V = 1e-10, nu = -1), G = list(G1 = list(V = 1e-10, nu = -1)))
+
+m1<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID+~, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m1)
+
+m2<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2)
+
+m3<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient+Fitness_class+Taxonomic.group,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m3)
+
+m4<-MCMCglmm(Effect.sizes~Taxonomic.group,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4)
