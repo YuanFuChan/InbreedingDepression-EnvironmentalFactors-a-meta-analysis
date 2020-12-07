@@ -8,6 +8,10 @@ library(MCMCglmm)
 setwd("/Directory/path/to/working_directory")
 EnvExp<-read.csv("Ibd_EnvExp_2020.csv",header=T)
 
+#Subset the data spreadsheet into control and stressful environmental treatments 
+Stress<-subset(EnvExp,EnvExp$Env_design!="Control")
+Control<-subset(EnvExp,EnvExp$Env_design=="Control")
+
 ############################################################################
 ############################################################################
 
@@ -28,6 +32,34 @@ m1<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Arti
 
 summary(m1)
 
+###Results
+###            post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)   -0.2250  -0.2703  -0.1759    870.2 <0.001 ***
+###---
+###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Control_m1<-MCMCglmm(Effect.sizes~1,mev = Control$Var,data=Control,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+summary(Control_m1)
+###Results
+###            post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)   -0.2229  -0.2762  -0.1692     1000 <0.001 ***
+###---
+###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Stress_m1<-MCMCglmm(Effect.sizes~1,mev = Stress$Var,data=Stress,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+summary(Stress_m1)
+
+###Results
+
+###               post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)   -0.2298  -0.2822  -0.1788     1000 <0.001 ***
+###---
+###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+############################################################################
+############################################################################
 
 ## Analysis 2: Meta-analysis on the effects of inbreeding coefficient on the effect siezes
 
@@ -36,9 +68,33 @@ summary(m2)
 
 ###Results
 ####                post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)      -0.04659 -0.12977  0.03741     1121  0.264    
-###Ibd_coefficient  -0.31808 -0.47000 -0.16254     1000 <0.001 ***
+###(Intercept)      -0.07145 -0.14465  0.00527   1000.0  0.076 .  
+###Ibd_coefficient  -0.33659 -0.46340 -0.20601    913.5 <0.001 ***
 ### pMCMC less than 0.001, inbreeding coefficient has significant effect on the effect sizes
+
+
+Control_m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+summary(Stress_m2)
+
+###Results
+###                  post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)      -0.10777 -0.19280 -0.02839     1000  0.016 *  
+###Ibd_coefficient  -0.25735 -0.38753 -0.13501     1000 <0.001 ***
+
+
+
+Stress_m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+summary(Control_m2)
+
+###Results
+###                  post.mean l-95% CI u-95% CI eff.samp pMCMC   
+###(Intercept)      -0.09028 -0.18551  0.01058     1000 0.076 . 
+###Ibd_coefficient  -0.30432 -0.48525 -0.11723     1000 0.002 **
+
+############################################################################
+############################################################################
 
 ## Analysis 3: Meta-analysis on the effects of inbreeding coefficient and stress levels on the effect siezes
 
