@@ -116,6 +116,19 @@ summary(m3)
 ###Stress_lv          0.08959  0.02889  0.15893     1005  0.006 ** 
 ### Stress level (positive) and inbreeding coefficient (negative) have significant effects on the effect sizes
 
+
+m3_1<-MCMCglmm(Effect.sizes~Ibd_coefficient2:Stress_lv,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+
+ ###Results
+### post.mean l-95% CI u-95% CI eff.samp
+###units    0.1401   0.1267   0.1531     1000
+
+### Location effects: Effect.sizes ~ Ibd_coefficient2:Stress_lv 
+
+###                           post.mean l-95% CI u-95% CI eff.samp  pMCMC    
+###(Intercept)                 -0.23521 -0.29756 -0.18816     1227 <0.001 ***
+###Ibd_coefficient2:Stress_lv  -0.31127 -0.61364 -0.05315     1000  0.036 *  
+
 #############################################################################
 ###Plotting the relationship between inbreeding coefficient and the effect size
 
@@ -150,48 +163,37 @@ lines(ix+0.5,res[,3],type="l", lwd = 2)
 
 ## Analysis 4: Meta-analysis on the effects of inbreeding coefficient, stress levels and stress types on the effect siezes
 
-m4<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+m4<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
 
 summary(m4)
 
-## Iterations = 10001:109901
-## Thinning interval  = 100
-## Sample size  = 1000 
-
-## DIC: 1835.801 
-
-## G-structure:  ~Article_ID
-
-##             post.mean l-95% CI u-95% CI eff.samp
-##Article_ID   0.06428  0.04181  0.08898     1000
-
-## R-structure:  ~units
-
-      post.mean l-95% CI u-95% CI eff.samp
-##units    0.1006  0.09352   0.1074     1000
-
-## Location effects: Effect.sizes ~ Env_factors + Ibd_coefficient2 
-
-##                                         post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-##(Intercept)                               0.01837 -0.62386  0.55988   1000.0  0.950    
-##Env_factorsBetween species interaction   -0.32869 -0.93852  0.25144   1000.0  0.290    
-##Env_factorsChemical stress               -0.35221 -0.93326  0.29372   1000.0  0.268    
-##Env_factorsControl                       -0.24278 -0.82837  0.37170   1000.0  0.404    
-##Env_factorsFood                          -0.24408 -0.85917  0.33675   1000.0  0.416    
-##Env_factorsFood                          -0.83061 -1.65260  0.01828    833.4  0.048 *  
-##Env_factorsLight                         -0.47982 -1.05240  0.18734   1000.0  0.132    
-##Env_factorsMultiple factors              -0.29685 -0.89344  0.29514   1000.0  0.334    
-##Env_factorsSalinity                       0.17717 -0.50752  0.85259   1000.0  0.616    
-##Env_factorsTemperature                   -0.17933 -0.76672  0.44188   1000.0  0.574    
-##Env_factorsWater stress                  -0.29332 -0.85458  0.34669   1000.0  0.340    
-##Env_factorsWithin species interaction    -0.20889 -0.81431  0.38061   1000.0  0.502    
-##Ibd_coefficient2                         -0.32396 -0.44986 -0.21164   1000.0 <0.001 ***
+###Results 
+###                                        post.mean l-95% CI u-95% CI eff.samp pMCMC   
+###(Intercept)                              -0.02942 -0.74383  0.70439     1000 0.944   
+###Env_factorsBetween species interaction   -0.29967 -1.08818  0.38245     1000 0.406   
+###Env_factorsChemical stress               -0.28488 -1.07070  0.45351     1000 0.464   
+###Env_factorsControl                       -0.49800 -1.77198  0.84800     1000 0.476   
+###Env_factorsLight                         -0.49205 -1.26055  0.28014     1000 0.218   
+###Env_factorsMultiple factors              -0.27957 -1.05139  0.41930     1000 0.446   
+###Env_factorsNutrient                      -0.16735 -0.91210  0.55403     1000 0.622   
+###Env_factorsNutrient                      -0.41187 -1.88340  0.95257     1000 0.554   
+###Env_factorsSalinity                       0.24875 -0.55165  1.01669     1000 0.548   
+###Env_factorsTemperature                   -0.11407 -0.88343  0.58630     1000 0.738   
+###Env_factorsWater stress                  -0.13288 -0.91411  0.59185     1000 0.694   
+###Env_factorsWithin species interaction    -0.15996 -0.88888  0.58282     1000 0.656   
+###Ibd_coefficient2                         -0.28254 -0.45883 -0.10174     1000 0.002 **
 
 
+table(EnvExp$Env_factors)
 
-###Results
-### Only 2 stress types' (soil and host species) credible intervals cross 0 and have significant p values 
-### Stres type doesn't have effect on inbreeding depression
+###                         Air  Between species interaction              Chemical stress 
+###                           2                          265                           68 
+###                     Control                        Light             Multiple factors 
+###                           1                           30                          230 
+###                    Nutrient                    Nutrient                      Salinity 
+###                         249                            2                           26 
+###                 Temperature                 Water stress   Within species interaction 
+###                         198                          145                          209 
 
 ## Analysis 5: Meta-analysis on the effects of inbreeding coefficient, stress levels and taxons on the effect siezes
 
