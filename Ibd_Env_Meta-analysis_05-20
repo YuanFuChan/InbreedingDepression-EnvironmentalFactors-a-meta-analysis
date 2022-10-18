@@ -8,6 +8,93 @@ library(MCMCglmm)
 setwd("/Directory/path/to/working_directory")
 EnvExp<-read.csv("Ibd_EnvExp_2020.csv",header=T)
 
+##############################################################################
+######## Split dataset and calculate stress levels ###########################
+
+#split data on article and study
+names(EnvExp)[3] <- "SubStudy"
+
+SplitEnv <- split(EnvExp, list(EnvExp$Article_ID, EnvExp$Study.ID, EnvExp$SubStudy), drop=T)
+
+# makes a list
+class(SplitEnv) 
+
+length(SplitEnv) 
+# 976 substudies
+
+# check structure of data at some critical columns
+SplitEnv[[1]][,c(15:21,31:35)]
+SplitEnv[[2]][,c(15:21,31:35)]
+SplitEnv[[3]][,c(15:21,31:35)]
+SplitEnv[[4]][,c(15:21,31:35)]
+SplitEnv[[5]][,c(15:21,31:35)]
+
+subset_size<-lapply(SplitEnv, function(y)dim(y)[[1]]) 
+table(unlist(subset_size))
+
+ibc_check <- lapply(SplitEnv, function (x) length(unique(x$Ibd_coefficient)))
+table(unlist(ibc_check))
+which(ibc_check > 1)
+
+control_check <- lapply(SplitEnv, function(x) length(which(x$Env_design == "Control")))
+table(unlist(control_check))
+which(control_check < 1)
+which(control_check > 1)
+
+env_check <- lapply(SplitEnv, function (y) length(unique(y$Env_type)))
+table(unlist(env_check))
+
+table(unlist(lapply(SplitEnv, function (x)dim(x)[1])))
+# some studies only have one row
+
+# check integrity of columns
+table(EnvExp$Env_design, useNA="always")
+table(EnvExp$Env_type, useNA="always")
+
+# code to calculate a new column
+Control_check<-lapply(SplitEnv, function (y) length(max(y$NIb_resp)))
+table(unlist(Control_check))
+
+# Calculate New Stress lv
+
+Stress_lv3 <- lapply(SplitEnv, function(x){
+        Ref.env <- which(x$NIb_resp==max(x$NIb_resp))[1]
+        Trt.env <- which(x$NIb_resp!=max(x$NIb_resp))
+        res <- numeric(dim(x)[[1]])
+        res[Ref.env] <- NA
+        for (i in 1:length(Trt.env)){
+        res[Trt.env[i]] <- ((x$NIb_resp[Ref.env]-x$NIb_resp[Trt.env[i]])/x$NIb_resp[Ref.env]) 
+        }
+        
+res2 <- data.frame(x,"New_StressLv" = res)
+
+return(res2)
+      
+})
+
+NewSL <- do.call(rbind,Stress_lv3) # unlists previous list object Stress_lv3
+
+###### Calculate New effect size: environmental response effect size ########
+
+SubtractES <- lapply(Stress_lv3, function(y){
+  control.row <- which(y$NIb_resp==max(y$NIb_resp))[1]
+  treatment.rows <- which(y$NIb_resp!=max(y$NIb_resp))
+  res3 <- numeric(dim(y)[[1]])
+  res3[control.row] <- NA
+  for (i in 1:length(treatment.rows)){
+    res3[treatment.rows[i]] <- y$Genetic.load[treatment.rows[i]]-y$Genetic.load[control.row]
+  }
+  
+  res4 <- data.frame(y,"Delta_ES" = res3)
+  return(res4)
+
+})
+
+NewES_SL<-do.call(rbind, SubtractES)
+
+############################################################################
+############################################################################
+
 #Subset the data spreadsheet into control and stressful environmental treatments 
 Stress<-subset(EnvExp,EnvExp$Env_design!="Control")
 Control<-subset(EnvExp,EnvExp$Env_design=="Control")
