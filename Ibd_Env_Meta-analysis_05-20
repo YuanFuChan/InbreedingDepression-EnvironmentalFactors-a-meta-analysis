@@ -115,35 +115,18 @@ prior <- list(R=list(V = 1e-10, nu = -1), G = list(G1 = list(V = 1e-10, nu = -1)
 
 # Random effects meta-analysis with random effects for study/article level
 
-m1<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+# Whole dataset
+m1a<-MCMCglmm(Effect.sizes~1,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m1a)
 
-summary(m1)
+# Control environmental treatment
+m1b<-MCMCglmm(Effect.sizes~1,mev = Control$Var,data=Control,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m1b)
 
-###Results
-###            post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)   -0.2250  -0.2703  -0.1759    870.2 <0.001 ***
-###---
-###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# Stressful environmental treatment
+m1c<-MCMCglmm(Effect.sizes~1,mev = Stress$Var,data=Stress,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m1c)
 
-Control_m1<-MCMCglmm(Effect.sizes~1,mev = Control$Var,data=Control,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-
-summary(Control_m1)
-###Results
-###            post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)   -0.2229  -0.2762  -0.1692     1000 <0.001 ***
-###---
-###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-Stress_m1<-MCMCglmm(Effect.sizes~1,mev = Stress$Var,data=Stress,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-
-summary(Stress_m1)
-
-###Results
-
-###               post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)   -0.2298  -0.2822  -0.1788     1000 <0.001 ***
-###---
-###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ##################################################################################################
 ##################################################################################################
@@ -151,14 +134,8 @@ summary(Stress_m1)
 ## Analysis 2: Meta-analysis of the relationship between inbreeding coefficient and inbreeding effect siezes
 ## This is done in the datasheet of the control environments only
 
-Control<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-
-summary(Control)
-
-###Results
-###                  post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)      -0.10777 -0.19280 -0.02839     1000  0.016 *  
-###Ibd_coefficient  -0.25735 -0.38753 -0.13501     1000 <0.001 ***
+m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2)
 
 
 ########################################################################################################
@@ -174,7 +151,7 @@ Stress_N<-subset(NewSL, NewSL$New_StressLv!="NA" & NewSL$Fitness_class=="N")
 Stress_F$Ibd_coefficient2<-Stress_F$Ibd_coefficient-0.5
 Stress_N$Ibd_coefficient2<-Stress_N$Ibd_coefficient-0.5
 
-## Multiple inbreeding effect sizes with -1.
+## Multiply inbreeding effect sizes by -1.
 ## Therefore, the magnitude of inbreeding depression will positively scale with inbreeding effect sizes
 Stress_F$Effect.sizes<--1*Stress_F$Effect.sizes
 Stress_N$Effect.sizes<--1*Stress_N$Effect.sizes
@@ -464,7 +441,7 @@ Trt_N<-subset(NewES_SL,NewES_SL$Fitness_class=="N"& NewES_SL$New_StressLv!="NA")
 Trt_F$Ibd_coefficient2<-Trt_F$Ibd_coefficient-0.5
 Trt_N$Ibd_coefficient2<-Trt_N$Ibd_coefficient-0.5
 
-##### Multiple environmental response effect sizes with -1 ####
+##### Multiply environmental response effect sizes by -1 ####
 ##### The positive effect size indicate that inbreeding depression is stronger in stressful environments than benign environments #####
 
 Trt_F$Delta_ES2<-(Trt_F$Delta_ES)*-1
