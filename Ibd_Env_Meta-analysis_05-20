@@ -145,24 +145,15 @@ summary(Stress_m1)
 ###---
 ###Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-############################################################################
-############################################################################
+##################################################################################################
+##################################################################################################
 
-## Analysis 2: Meta-analysis on the effects of inbreeding coefficient on the effect siezes
+## Analysis 2: Meta-analysis of the relationship between inbreeding coefficient and inbreeding effect siezes
+## This is done in the datasheet of the control environments only
 
-m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-summary(m2)
+Control<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
 
-###Results
-####                post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)      -0.07145 -0.14465  0.00527   1000.0  0.076 .  
-###Ibd_coefficient  -0.33659 -0.46340 -0.20601    913.5 <0.001 ***
-### pMCMC less than 0.001, inbreeding coefficient has significant effect on the effect sizes
-
-
-Control_m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-
-summary(Stress_m2)
+summary(Control)
 
 ###Results
 ###                  post.mean l-95% CI u-95% CI eff.samp  pMCMC    
@@ -170,132 +161,312 @@ summary(Stress_m2)
 ###Ibd_coefficient  -0.25735 -0.38753 -0.13501     1000 <0.001 ***
 
 
+########################################################################################################
+### Analysis 3: Meta-analysis of the relationship between stress levels and inbreeding effect siezes ###
+### This is done in fitness component traits and non-fitness component traits separately ###############
+########################################################################################################
 
-Stress_m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+## Subset the dataset into fitness component traits and non-fitness component traits
+Stress_F<-subset(NewSL, NewSL$New_StressLv!="NA" & NewSL$Fitness_class=="F")
+Stress_N<-subset(NewSL, NewSL$New_StressLv!="NA" & NewSL$Fitness_class=="N")
 
-summary(Control_m2)
+## Centralise inbreeding coefficient arount 0.5
+Stress_F$Ibd_coefficient2<-Stress_F$Ibd_coefficient-0.5
+Stress_N$Ibd_coefficient2<-Stress_N$Ibd_coefficient-0.5
 
-###Results
-###                  post.mean l-95% CI u-95% CI eff.samp pMCMC   
-###(Intercept)      -0.09028 -0.18551  0.01058     1000 0.076 . 
-###Ibd_coefficient  -0.30432 -0.48525 -0.11723     1000 0.002 **
+## Multiple inbreeding effect sizes with -1.
+## Therefore, the magnitude of inbreeding depression will positively scale with inbreeding effect sizes
+Stress_F$Effect.sizes<--1*Stress_F$Effect.sizes
+Stress_N$Effect.sizes<--1*Stress_N$Effect.sizes
 
-############################################################################
-############################################################################
+##################################################################################################################
+################## Starting the meta-analysis with a minimal model for fitness component traits ##################
+##################################################################################################################
 
-## Analysis 3: Meta-analysis on the effects of inbreeding coefficient and stress levels on the effect siezes
+## Article ID and mev were fitted as random effects for all models progressed from the minimal model.
+## The goodness of fit of the model is determined when the values of DIC no longer increase.
 
-##Centralize inbreeding coefficient in stress spreadsheet
-Stress$Ibd_coefficient2<-Stress$Ibd_coefficient-0.5
+m2a<-MCMCglmm(Effect.sizes~Ibd_coefficient2,mev = Stress_F$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2a)
 
-m3<-MCMCglmm(Effect.sizes~Ibd_coefficient+Stress_lv,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-summary(m3)
+m2b<-MCMCglmm(Effect.sizes~Ibd_coefficient2+New_StressLv,mev = Stress_F$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2b)
 
-###Results
-###         post.mean l-95% CI u-95% CI eff.samp
-### units    0.1395   0.1263   0.1546    845.2
+m2c<-MCMCglmm(Effect.sizes~Ibd_coefficient2*New_StressLv,mev = Stress_F$Var,data=Stress_N,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2c)
 
-### Location effects: Effect.sizes ~ Ibd_coefficient2 + Stress_lv 
+m2d<-MCMCglmm(Effect.sizes~Ibd_coefficient2+poly(New_StressLv,2,raw=TRUE),mev = Stress_F$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2d)
 
-###                 post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)       -0.26326 -0.32516 -0.21059     1000 <0.001 ***
-###Ibd_coefficient2  -0.29859 -0.47733 -0.12580     1000 <0.001 ***
-###Stress_lv          0.08959  0.02889  0.15893     1005  0.006 ** 
-### Stress level (positive) and inbreeding coefficient (negative) have significant effects on the effect sizes
+m2e<-MCMCglmm(Effect.sizes~Ibd_coefficient2+poly(New_StressLv,3,raw=TRUE),mev = Stress_F$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m2e)
 
+##### Plotting the relationship between inbreeding effect sizes and stress levels in fitness component traits #####
+##### The model with the lowerest DIC is m2d (the best fit model) #################################################
 
-m3_1<-MCMCglmm(Effect.sizes~Ibd_coefficient2:Stress_lv,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+ix<-(0:1000)/1000
 
- ###Results
-### post.mean l-95% CI u-95% CI eff.samp
-###units    0.1401   0.1267   0.1531     1000
+m2d.sol_s <- cbind(m2d$Sol[, "(Intercept)"],m2d$Sol[, "poly(New_StressLv, 2, raw = TRUE)1"],m2d$Sol[, "poly(New_StressLv, 2, raw = TRUE)2"])
 
-### Location effects: Effect.sizes ~ Ibd_coefficient2:Stress_lv 
-
-###                           post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-###(Intercept)                 -0.23521 -0.29756 -0.18816     1227 <0.001 ***
-###Ibd_coefficient2:Stress_lv  -0.31127 -0.61364 -0.05315     1000  0.036 *  
-
-#############################################################################
-###Plotting the relationship between inbreeding coefficient and the effect size
-
-ix <- (-500:500)/1000
-
-m3.sol <- cbind(m3$Sol[, "(Intercept)"],m3$Sol[, "Ibd_coefficient2"])
-m3.sol <- split(m3.sol,1:1000)
+m2d.sol_s <- split(m2d.sol_s,1:1000)
 
 res <- matrix(NA,length(ix),3)
 
-for (i in 1:length(ix)){
-     pred1 <- lapply(m3.sol, function(y){
-     ny <- y[2]*ix[i] + y[1]  
-     return (ny)
-     })
 
+for (i in 1:length(ix)){
+  pred1 <- lapply(m2d.sol_s, function(y){
+    ny <-y[3]*ix[i]^2+ y[2]*ix[i] + y[1]  
+    return (ny)
+  })
+  
   pred1.int <- HPDinterval(mcmc(unlist(pred1)))
   pred1.u <- mean(unlist(pred1))
   res[i,] <- c(pred1.int,pred1.u)}
 
 res[1000,3] - res[1,3]
 
-par(mfrow=c(1,1))
+par(mfrow=c(2,2))
 par(mar = c(5,5,2,2))
 
-plot(ix+0.5,res[,3],type="n",xlim=c(0,1),ylim=c(-0.5,0.5), ylab = "Effect size", xlab = "Inbreeding coefficient", cex.lab = 1.5, cex.axis = 1.5)
+plot(ix,res[,3],type="n",xlim=c(0,1),ylim=c(0,0.5), ylab = "Inbreeding depression", xlab = "Stress level", cex.lab = 1, cex.axis = 1)
 polygon(x = c(ix,ix[length(ix):1]), y = c(res[,1],res[length(ix):1,2]),border = NA, col = "darkgrey")
-lines(ix+0.5,res[,3],type="l", lwd = 2)
+lines(ix,res[,3],type="l", lwd = 2)
+rug(Stress_F$Stress_lv, ticksize=0.03,lwd=0.5)
+text(x=-0.28,y=0.56,"(a)",font=2,cex=1,xpd=T)
 
-#############################################################################
-#############################################################################
+##################################################################################################################
+############### Starting the meta-analysis with a minimal model for non-fitness component traits #################
+##################################################################################################################
 
-## Analysis 4: Meta-analysis on the effects of inbreeding coefficient, stress levels and stress types on the effect siezes
+## Article ID and mev were fitted as random effects for all models progressed from the minimal model.
+## The goodness of fit of the model is determined when the values of DIC no longer increase.
 
-m4<-MCMCglmm(Effect.sizes~Stress_lv+Env_factors+Ibd_coefficient,mev = Stress$Var,data=Stress, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+m3a<-MCMCglmm(Effect.sizes~Ibd_coefficient2,mev = Stress_N$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4a)
 
-summary(m4)
+m3b<-MCMCglmm(Effect.sizes~Ibd_coefficient2+New_StressLv,mev = Stress_N$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4b)
 
-###Results 
-###                                        post.mean l-95% CI u-95% CI eff.samp pMCMC   
-###(Intercept)                              -0.02942 -0.74383  0.70439     1000 0.944   
-###Env_factorsBetween species interaction   -0.29967 -1.08818  0.38245     1000 0.406   
-###Env_factorsChemical stress               -0.28488 -1.07070  0.45351     1000 0.464   
-###Env_factorsControl                       -0.49800 -1.77198  0.84800     1000 0.476   
-###Env_factorsLight                         -0.49205 -1.26055  0.28014     1000 0.218   
-###Env_factorsMultiple factors              -0.27957 -1.05139  0.41930     1000 0.446   
-###Env_factorsNutrient                      -0.16735 -0.91210  0.55403     1000 0.622   
-###Env_factorsNutrient                      -0.41187 -1.88340  0.95257     1000 0.554   
-###Env_factorsSalinity                       0.24875 -0.55165  1.01669     1000 0.548   
-###Env_factorsTemperature                   -0.11407 -0.88343  0.58630     1000 0.738   
-###Env_factorsWater stress                  -0.13288 -0.91411  0.59185     1000 0.694   
-###Env_factorsWithin species interaction    -0.15996 -0.88888  0.58282     1000 0.656   
-###Ibd_coefficient2                         -0.28254 -0.45883 -0.10174     1000 0.002 **
+m3c<-MCMCglmm(Effect.sizes~Ibd_coefficient2*New_StressLv,mev = Stress_N$Var,data=Stress_N,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4c)
+
+m3d<-MCMCglmm(Effect.sizes~Ibd_coefficient2+poly(New_StressLv,2,raw=TRUE),mev = Stress_N$Var,data=Stress_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4d)
 
 
-table(EnvExp$Env_factors)
+### Plotting the relationship between inbreeding effect sizes and stress levels in non-fitness component traits ###
+##### The model with the lowerest DIC is m3b (the best fit model) #################################################
 
-###                         Air  Between species interaction              Chemical stress 
-###                           2                          265                           68 
-###                     Control                        Light             Multiple factors 
-###                           1                           30                          230 
-###                    Nutrient                    Nutrient                      Salinity 
-###                         249                            2                           26 
-###                 Temperature                 Water stress   Within species interaction 
-###                         198                          145                          209 
+ix<-(0:1000)/1000
 
-## Analysis 5: Meta-analysis on the effects of inbreeding coefficient, stress levels and taxons on the effect siezes
+m3b.sol_s <- cbind(m3b$Sol[, "(Intercept)"],m3b$Sol[, "New_StressLv"])
 
-m5<-MCMCglmm(Effect.sizes~Stress_lv+Taxonomic.group+Ibd_coefficient,mev = EnvExp$Var,data=EnvExp, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
-summary(m5)
+m3b.sol_s <- split(m3b.sol_s,1:1000)
+
+res <- matrix(NA,length(ix),3)
 
 
-###                           post.mean   l-95% CI   u-95% CI eff.samp  pMCMC    
-###(Intercept)               -0.0556136 -0.2945220  0.1801351     1000  0.638    
-###Stress_lv                  0.0006557  0.0004904  0.0008171     1000 <0.001 ***
-###Taxonomic.groupEchinoderm -0.0544736 -0.6989364  0.5664229     1000  0.862    
-###Taxonomic.groupFish       -0.1990267 -0.5547497  0.1220521     1000  0.248    
-###Taxonomic.groupInsect      0.0647992 -0.1547570  0.2941014     1000  0.598    
-###Taxonomic.groupMammal      0.0232154 -1.0123370  1.0296293     1165  0.944    
-###Taxonomic.groupMollusc     0.0038735 -0.2291383  0.2386106     1000  0.956    
-###Taxonomic.groupPlant      -0.0039048 -0.2397607  0.2231821     1000  0.990    
-###Ibd_coefficient           -0.3361589 -0.4905202 -0.1871392     1133 <0.001 ***
-### Taxonomic group doesn't have effect on inbreeding depression
+for (i in 1:length(ix)){
+  pred1 <- lapply(m3b.sol_s, function(y){
+    ny <- y[2]*ix[i] + y[1]  
+    return (ny)
+  })
+  
+  pred1.int <- HPDinterval(mcmc(unlist(pred1)))
+  pred1.u <- mean(unlist(pred1))
+  res[i,] <- c(pred1.int,pred1.u)}
+
+res[1000,3] - res[1,3]
+
+par(mar = c(5,5,2,2))
+
+plot(ix,res[,3],type="n",xlim=c(0,1),ylim=c(0,0.5), ylab = "Inbreeding depression", xlab = "Stress level", cex.lab = 1, cex.axis = 1)
+polygon(x = c(ix,ix[length(ix):1]), y = c(res[,1],res[length(ix):1,2]),border = NA, col = "darkgrey")
+lines(ix,res[,3],type="l", lwd = 2)
+rug(Stress_N$New_StressLv, ticksize=0.03,lwd=0.5)
+text(x=-0.28,y=0.56,"(b)",font=2,cex=1,xpd=T)
+text(x=0.5, y= 0.4, "ES = 0.085 + 0.195 stress", font=2,cex=1,xpd=T)
+
+################################################################################################################
+### Analysis 4: Meta-analysis of the relationship between environmental factors and inbreeding effect siezes ###
+### This is done in the stressful enviornmental treatments only ################################################
+################################################################################################################
+
+############################## Starting the meta-analysis with a minimal model #################################
+
+m4a<-MCMCglmm(Effect.sizes~Ibd_coefficient2,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4a)
+
+m4b<-MCMCglmm(Effect.sizes~Ibd_coefficient2+Env_factors,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4b)
+
+m4c<-MCMCglmm(Effect.sizes~Env_factors*Fitness_class+Ibd_coefficient2,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m4c)
+
+##### Plotting the relationship between inbreeding effect sizes and environmental factors in stressful environments #####
+##### The model with the lowerest DIC is m4b (the best fit model) #######################################################
+
+res4 <- cbind(m4b$Sol[, "(Intercept)"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsChemical stress"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsLight"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsMultiple factors"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsNutrient"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsSalinity"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsTemperature"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsWater stress"],
+              m4b$Sol[, "(Intercept)"] + m4b$Sol[, "Env_factorsWithin species interaction"])
+
+res4.tmp <- HPDinterval(mcmc(res4))
+
+hpm <- c(mean(mcmc(res4)[,1]),
+         mean(mcmc(res4)[,2]),
+         mean(mcmc(res4)[,3]),
+         mean(mcmc(res4)[,4]),
+         mean(mcmc(res4)[,5]),
+         mean(mcmc(res4)[,6]),
+         mean(mcmc(res4)[,7]),
+         mean(mcmc(res4)[,8]),
+         mean(mcmc(res4)[,9]))
+
+p.val <- c(pMCMC(mcmc(res4)[,1]),
+           pMCMC(mcmc(res4)[,2]),
+           pMCMC(mcmc(res4)[,3]),
+           pMCMC(mcmc(res4)[,4]),
+           pMCMC(mcmc(res4)[,5]),
+           pMCMC(mcmc(res4)[,6]),
+           pMCMC(mcmc(res4)[,7]),
+           pMCMC(mcmc(res4)[,8]),
+           pMCMC(mcmc(res4)[,9]))
+
+res4 <- data.frame(hpm,res4.tmp, p.val)
+colnames(res4) <- c("post.mean", "l-95% CI", "u-95% CI", "pMCMC")
+rownames(res4) <- c("Between species interaction","Chemical stress","Light","Multiple factors", "Nutrient", "Salinity","Temperature","Water stress","Within species interaction")
+res4
+
+
+ng <- 9
+par(mfrow = c(2,2))
+par(mar=c(5,4,2,2))
+
+plot(res4[,1],c(ng:1),xlab="Inbreeding effect size", ylab="", bg=c(rep("black",ng)), pch=22,
+     cex=1, xlim=c(-0.5,4),ylim=c(0,ng+2),yaxt="n",cex.axis=1,cex.lab=1) 
+
+e.bars.points2(res5[,1], z1 = res5[,3], z2 = res5[,2], x = c(ng:1),cap=0.1,clr=c(rep("black",ng)), lwd=1.5)
+abline(v=0,lty=5,col="gray50", lwd=1.5)
+
+# add some labels to the plot, take care to get the correct order
+# adjust x as needed
+
+
+text(x = 0.8, y = 9,labels="BT interaction", pos=4,cex=1)
+text(x = 0.8, y = 8,labels="Chemical", pos=4,cex=1)
+text(x = 0.8, y = 7,labels="Light", pos=4,cex=1)
+text(x = 0.8, y = 6,labels="Multiple factors", pos=4,cex=1)
+text(x = 0.8, y = 5,labels="Nutrient", pos=4,cex=1)
+text(x = 0.8, y = 4,labels="Salinity", pos=4,cex=1)
+text(x = 0.8, y = 3,labels="Temperature", pos=4,cex=1)
+text(x = 0.8, y = 2,labels="Water stress", pos=4,cex=1)
+text(x = 0.8, y = 1,labels="WT interaction", pos=4,cex=1)
+
+
+# add sample sizes, numbers of studies
+
+text(x = 2.8, y = 9,labels="n = 285", pos=4,cex=1)
+text(x = 2.8, y = 8,labels="n = 77", pos=4,cex=1)
+text(x = 2.8, y = 7,labels="n = 27", pos=4,cex=1)
+text(x = 2.8, y = 6,labels="n = 196", pos=4,cex=1)
+text(x = 2.8, y = 5,labels="n = 232", pos=4,cex=1)
+text(x = 2.8, y = 4,labels="n = 24", pos=4,cex=1)
+text(x = 2.8, y = 3,labels="n = 194", pos=4,cex=1)
+text(x = 2.8, y = 2,labels="n = 154", pos=4,cex=1)
+text(x = 2.8, y = 1,labels="n = 173", pos=4,cex=1)
+
+text(x=-0.9,y=12,"(a)",font=2,cex=1,xpd=T)
+
+################################################################################################################
+### Classifying environmental factors into abiotic, biotic and multiple factors ################################
+### Analysis 5: Meta-analysis of the relationship between environmental factors and inbreeding effect siezes ###
+### This is done in the stressful enviornmental treatments only ################################################
+################################################################################################################
+
+############################## Starting the meta-analysis with a minimal model #################################
+
+m5a<-MCMCglmm(Effect.sizes~Env_type*Fitness_class+Ibd_coefficient2,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m5a)
+
+m5b<-MCMCglmm(Effect.sizes~Ibd_coefficient2+Env_type,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m5b)
+
+m5c<-MCMCglmm(Effect.sizes~Env_type*New_StressLv+Ibd_coefficient2,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m5c)
+
+m5d<-MCMCglmm(Effect.sizes~Env_type*New_StressLv+Ibd_coefficient2*New_StressLv,mev = TrtEnv$Var,data=TrtEnv,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m5d)
+
+##### Plotting the relationship between inbreeding effect sizes and environmental factors in stressful environments #####
+##### The model with the lowerest DIC is m5b (the best fit model) #######################################################
+
+res5 <- cbind(m5b$Sol[, "(Intercept)"],
+              m5b$Sol[, "(Intercept)"] + m5b$Sol[, "Env_typeBiotic"],
+              m5b$Sol[, "(Intercept)"] + m5b$Sol[, "Env_typeMultiple factors"])
+
+
+res5.tmp <- HPDinterval(mcmc(res5))
+
+hpm <- c(mean(mcmc(res5)[,1]),
+         mean(mcmc(res5)[,2]),
+         mean(mcmc(res5)[,3]))
+
+
+p.val <- c(pMCMC(mcmc(res5)[,1]),
+           pMCMC(mcmc(res5)[,2]),
+           pMCMC(mcmc(res5)[,3]))
+
+
+res5 <- data.frame(hpm,res5.tmp, p.val)
+colnames(res5) <- c("post.mean", "l-95% CI", "u-95% CI", "pMCMC")
+rownames(res5) <- c("Abiotic","Biotic","Multiple factors")
+res5
+
+
+ng <- 3
+
+plot(res5[,1],c(ng:1),xlab="Inbreeding effect size", ylab="", bg=c(rep("black",ng)), pch=22,
+     cex=1, xlim=c(-0.1,1.2),ylim=c(0,ng+1),yaxt="n",cex.axis=1,cex.lab=1) 
+e.bars.points2(res6[,1], z1 = res6[,3], z2 = res6[,2], x = c(ng:1),cap=0.1,clr=c(rep("black",ng)), lwd=1.5)
+abline(v=0,lty=5,col="gray50", lwd=1.5)
+
+
+text(x = 0.45, y = 3,labels="Abiotic", pos=4, cex=1)
+text(x = 0.45, y = 2,labels="Biotic", pos=4, cex=1)
+text(x = 0.45, y = 1,labels="Multiple", pos=4, cex=1)
+
+text(x = 0.8, y = 3,labels="n = 397", pos=4, cex=1)
+text(x = 0.8, y = 2,labels="n = 207", pos=4, cex=1)
+text(x = 0.8, y = 1,labels="n = 76", pos=4, cex=1)
+
+text(x=-0.2,y=4.4,"(b)",font=2,cex=1,xpd=T)
+
+
+############################################################################################################################
+### Analysis 6: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+### This is done in fitness component traits and non-fitness component traits separately ###################################
+############################################################################################################################
+
+NewES_SL<-subset(NewES_SL, NewES_SL$New_StressLv!="NA")
+names(NewES_SL)
+
+##### Subset dataset into fitness componenet traits and non-fitness component traits ####
+Trt_F<-subset(NewES_SL,NewES_SL$Fitness_class=="F"& NewES_SL$New_StressLv!="NA")
+Trt_N<-subset(NewES_SL,NewES_SL$Fitness_class=="N"& NewES_SL$New_StressLv!="NA")
+
+##### Centralise inbreeding coefficient around 0.5 #####
+Trt_F$Ibd_coefficient2<-Trt_F$Ibd_coefficient-0.5
+Trt_N$Ibd_coefficient2<-Trt_N$Ibd_coefficient-0.5
+
+##### Multiple environmental response effect sizes with -1 ####
+##### The positive effect size indicate that inbreeding depression is stronger in stressful environments than benign environments #####
+
+Trt_F$Delta_ES2<-(Trt_F$Delta_ES)*-1
+Trt_N$Delta_ES2<-(Trt_N$Delta_ES)*-1
+NewES_SL$Delta_ES<-(NewES_SL$Delta_ES)*-1
