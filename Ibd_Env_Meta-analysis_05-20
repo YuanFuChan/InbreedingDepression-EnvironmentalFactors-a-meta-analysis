@@ -447,3 +447,192 @@ Trt_N$Ibd_coefficient2<-Trt_N$Ibd_coefficient-0.5
 Trt_F$Delta_ES2<-(Trt_F$Delta_ES)*-1
 Trt_N$Delta_ES2<-(Trt_N$Delta_ES)*-1
 NewES_SL$Delta_ES<-(NewES_SL$Delta_ES)*-1
+
+#### In fitness components
+m6a<-MCMCglmm(Delta_ES2~New_StressLv,mev = Trt_F$Var,data=Trt_F,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m6)
+
+##### Plotting the relationship between environmental response effect sizes and stress levels in fitness component trait #####
+ix <- (0:1000)/1000
+
+m6a.sol <- cbind(m6a$Sol[, "(Intercept)"],m6a$Sol[, "New_StressLv"])
+m6a.sol <- split(m6a.sol,1:1000)
+
+res <- matrix(NA,length(ix),3)
+
+for (i in 1:length(ix)){
+  pred2 <- lapply(m6a.sol, function(y){
+    ny <- y[2]*ix[i] + y[1]  
+    return (ny)
+  })
+  
+  pred2.int <- HPDinterval(mcmc(unlist(pred2)))
+  pred2.u <- mean(unlist(pred2))
+  res[i,] <- c(pred2.int,pred2.u)}
+
+res[1000,3] - res[1,3]
+
+par(mar = c(5,5,2,2))
+
+plot(ix,res[,3],type="n",xlim=c(0,1),ylim=c(-0.6,0.4), ylab = "Environmental Response", xlab = "Stress level", cex.lab = 1, cex.axis = 1)
+polygon(x = c(ix,ix[length(ix):1]), y = c(res[,1],res[length(ix):1,2]),border = NA, col = "darkgrey")
+lines(ix,res[,3],type="l", lwd = 2)
+rug(NewES_SL$New_StressLv, ticksize=0.03,lwd=0.5)
+text(x=-0.27,y=0.56,"(c)",font=2,cex=1,xpd=T)
+
+#### In non-fitness component traits
+m6b<-MCMCglmm(Delta_ES2~New_StressLv,mev = Trt_N$Var,data=Trt_N,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m7)
+
+##### Plotting the relationship between environmental response effect sizes and stress levels in fitness component trait #####
+ix <- (0:1200)/1000
+
+m6b.sol <- cbind(m6b$Sol[, "(Intercept)"],m6b$Sol[, "New_StressLv"])
+m6b.sol <- split(m6b.sol,1:1000)
+
+res <- matrix(NA,length(ix),3)
+
+for (i in 1:length(ix)){
+  pred2 <- lapply(m6b.sol, function(y){
+    ny <- y[2]*ix[i] + y[1]  
+    return (ny)
+  })
+  
+  pred2.int <- HPDinterval(mcmc(unlist(pred2)))
+  pred2.u <- mean(unlist(pred2))
+  res[i,] <- c(pred2.int,pred2.u)}
+
+res[1000,3] - res[1,3]
+
+par(mar = c(5,5,2,2))
+
+plot(ix,res[,3],type="n",xlim=c(0,1),ylim=c(-2.4,0.7), ylab = "Environmental Response", xlab = "Stress level", cex.lab = 1, cex.axis = 1)
+polygon(x = c(ix,ix[length(ix):1]), y = c(res[,1],res[length(ix):1,2]),border = NA, col = "darkgrey")
+lines(ix,res[,3],type="l", lwd = 2)
+rug(NewES_SL$New_StressLv, ticksize=0.03,lwd=0.5)
+text(x=-0.27,y=1.2,"(d)",font=2,cex=1,xpd=T)
+
+
+############################################################################################################################
+### Analysis 7: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+############################################################################################################################
+
+m7<-MCMCglmm(Delta_ES~Env_factors,mev = NewES_SL$Var,data=NewES_SL,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m7)
+
+##### Plotting the relationship between environmental response effect sizes and environmental factors #####
+
+res7 <- cbind(m7$Sol[, "(Intercept)"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsChemical stress"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsLight"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsMultiple factors"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsNutrient"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsSalinity"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsTemperature"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsWater stress"],
+              m7$Sol[, "(Intercept)"] + m7$Sol[, "Env_factorsWithin species interaction"])
+
+res7.tmp <- HPDinterval(mcmc(res7))
+
+hpm <- c(mean(mcmc(res7)[,1]),
+         mean(mcmc(res7)[,2]),
+         mean(mcmc(res7)[,3]),
+         mean(mcmc(res7)[,4]),
+         mean(mcmc(res7)[,5]),
+         mean(mcmc(res7)[,6]),
+         mean(mcmc(res7)[,7]),
+         mean(mcmc(res7)[,8]),
+         mean(mcmc(res7)[,9]))
+
+p.val <- c(pMCMC(mcmc(res7)[,1]),
+           pMCMC(mcmc(res7)[,2]),
+           pMCMC(mcmc(res7)[,3]),
+           pMCMC(mcmc(res7)[,4]),
+           pMCMC(mcmc(res7)[,5]),
+           pMCMC(mcmc(res7)[,6]),
+           pMCMC(mcmc(res7)[,7]),
+           pMCMC(mcmc(res7)[,8]),
+           pMCMC(mcmc(res7)[,9]))
+
+res7 <- data.frame(hpm,res7.tmp, p.val)
+colnames(res7) <- c("post.mean", "l-95% CI", "u-95% CI", "pMCMC")
+rownames(res7) <- c("Between species interaction","Chemical stress","Light","Multiple factors", "Nutrient", "Salinity","Temperature","Water stress","Within species interaction")
+res7
+
+ng <- 9
+
+plot(res7[,1],c(ng:1),xlab="Environmental response effect size", ylab="", bg=c(rep("black",ng)), pch=22,
+     cex=1, xlim=c(-5.1,10),ylim=c(0,ng+2),yaxt="n",cex.axis=1,cex.lab=1) 
+e.bars.points2(res7[,1], z1 = res7[,3], z2 = res7[,2], x = c(ng:1),cap=0.1,clr=c(rep("black",ng)), lwd=1.5)
+abline(v=0,lty=5,col="gray50", lwd=1.5)
+
+text(x = 2, y = 9,labels="BT interaction", pos=4,cex=0.7)
+text(x = 2, y = 8,labels="Chemical", pos=4,cex=0.7)
+text(x = 2, y = 7,labels="Light", pos=4,cex=0.7)
+text(x = 2, y = 6,labels="Multiple factors", pos=4,cex=0.7)
+text(x = 2, y = 5,labels="Nutrient", pos=4,cex=0.7)
+text(x = 2, y = 4,labels="Salinity", pos=4,cex=0.7)
+text(x = 2, y = 3,labels="Temperature", pos=4,cex=0.7)
+text(x = 2, y = 2,labels="Water stress", pos=4,cex=0.7)
+text(x = 2, y = 1,labels="WT interaction", pos=4,cex=0.7)
+
+# add sample sizes, numbers of studies
+
+text(x = 7, y = 9,labels="n = 285", pos=4,cex=0.7)
+text(x = 7, y = 8,labels="n = 77", pos=4,cex=0.7)
+text(x = 7, y = 7,labels="n = 27", pos=4,cex=0.7)
+text(x = 7, y = 6,labels="n = 196", pos=4,cex=0.7)
+text(x = 7, y = 5,labels="n = 232", pos=4,cex=0.7)
+text(x = 7, y = 4,labels="n = 24", pos=4,cex=0.7)
+text(x = 7, y = 3,labels="n = 194", pos=4,cex=0.7)
+text(x = 7, y = 2,labels="n = 154", pos=4,cex=0.7)
+text(x = 7, y = 1,labels="n = 173", pos=4,cex=0.7)
+
+text(x=-6.1,y=12.3,"(c)",font=2,cex=1,xpd=T)
+
+############################################################################################################################
+### Classifying environmental factors into abiotic, biotic and multiple factors ############################################
+### Analysis 8: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+############################################################################################################################
+
+m8<-MCMCglmm(Delta_ES~Env_type,mev = NewES_SL$Var,data=NewES_SL,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
+summary(m8)
+
+##### Plotting the relationship between environmental response effect sizes and environmental factors #####
+
+res8 <- cbind(m8$Sol[, "(Intercept)"],
+              m8$Sol[, "(Intercept)"] + m8$Sol[, "Env_typeBiotic"],
+              m8$Sol[, "(Intercept)"] + m8$Sol[, "Env_typeMultiple factors"])
+
+res8.tmp <- HPDinterval(mcmc(res8))
+
+hpm <- c(mean(mcmc(res8)[,1]),
+         mean(mcmc(res8)[,2]),
+         mean(mcmc(res8)[,3]))
+
+p.val <- c(pMCMC(mcmc(res8)[,1]),
+           pMCMC(mcmc(res8)[,2]),
+           pMCMC(mcmc(res8)[,3]))
+
+res8 <- data.frame(hpm,res8.tmp, p.val)
+colnames(res8) <- c("post.mean", "l-95% CI", "u-95% CI", "pMCMC")
+rownames(res8) <- c("Abiotic","Biotic","Multiple factors")
+res8
+
+ng <- 3
+par(mar=c(5,4,2,2))
+
+plot(res8[,1],c(ng:1),xlab="Environmental response effect size", ylab="", bg=c(rep("black",ng)), pch=22,
+     cex=1,cex.lab=1,cex.axis=1,xlim=c(-0.5,1.5),ylim=c(0,ng+1),yaxt="n") 
+e.bars.points2(res8[,1], z1 = res8[,3], z2 = res8[,2], x = c(ng:1),cap=0.1,clr=c(rep("black",ng)), lwd=1.5)
+abline(v=0,lty=5,col="gray50", lwd=1.5)
+
+text(x = 0.55, y = 3,labels="Abiotic", pos=4,cex=0.8)
+text(x = 0.55, y = 2,labels="Biotic", pos=4,cex=0.8)
+text(x = 0.55, y = 1,labels="Multiple", pos=4,cex=0.8)
+
+text(x = 1, y = 3,labels="n = 708", pos=4,cex=0.8)
+text(x = 1, y = 2,labels="n = 459", pos=4,cex=0.8)
+text(x = 1, y = 1,labels="n = 195", pos=4,cex=0.8)
+
+text(x=-0.63,y=4.4,"(d)",font=2,cex=1,xpd=T)
