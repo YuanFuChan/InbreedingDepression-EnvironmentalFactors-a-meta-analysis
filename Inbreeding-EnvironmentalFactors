@@ -137,7 +137,7 @@ summary(m1c)
 ##################################################################################################
 ##################################################################################################
 
-## Analysis 2: Meta-analysis of the relationship between inbreeding coefficient and inbreeding effect siezes
+## Analysis 2: Meta-analysis of inbreeding coefficient and inbreeding effect siezes
 ## This is done in the datasheet of the control environments only
 
 m2<-MCMCglmm(Effect.sizes~Ibd_coefficient,mev = Control$Var,data=Control, verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
@@ -145,7 +145,7 @@ summary(m2)
 
 
 ########################################################################################################
-### Analysis 3: Meta-analysis of the relationship between stress levels and inbreeding effect siezes ###
+### Analysis 3: Meta-analysis of stress levels and inbreeding effect siezes ############################
 ### This is done in fitness component traits and non-fitness component traits separately ###############
 ########################################################################################################
 
@@ -271,7 +271,7 @@ text(x=-0.28,y=0.56,"(b)",font=2,cex=1,xpd=T)
 text(x=0.5, y= 0.4, "ES = 0.085 + 0.195 stress", font=2,cex=1,xpd=T)
 
 ################################################################################################################
-### Analysis 4: Meta-analysis of the relationship between environmental factors and inbreeding effect siezes ###
+### Analysis 4: Meta-analysis of environmental factors and inbreeding effect siezes ############################
 ### This is done in the stressful enviornmental treatments only ################################################
 ################################################################################################################
 
@@ -368,7 +368,7 @@ text(x=-0.9,y=12,"(a)",font=2,cex=1,xpd=T)
 
 ################################################################################################################
 ### Classifying environmental factors into abiotic, biotic and multiple factors ################################
-### Analysis 5: Meta-analysis of the relationship between environmental factors and inbreeding effect siezes ###
+### Analysis 5: Meta-analysis of environmental factors and inbreeding effect siezes ############################
 ### This is done in the stressful enviornmental treatments only ################################################
 ################################################################################################################
 
@@ -432,7 +432,7 @@ text(x=-0.2,y=4.4,"(b)",font=2,cex=1,xpd=T)
 
 
 ############################################################################################################################
-### Analysis 6: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+### Analysis 6: Meta-analysis of environmental factors and environmental response effect siezes ############################
 ### This is done in fitness component traits and non-fitness component traits separately ###################################
 ############################################################################################################################
 
@@ -520,7 +520,7 @@ text(x=-0.27,y=1.2,"(d)",font=2,cex=1,xpd=T)
 
 
 ############################################################################################################################
-### Analysis 7: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+### Analysis 7: Meta-analysis of environmental factors and environmental response effect siezes ############################
 ############################################################################################################################
 
 m7<-MCMCglmm(Delta_ES~Env_factors,mev = NewES_SL$Var,data=NewES_SL,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
@@ -598,7 +598,7 @@ text(x=-6.1,y=12.3,"(c)",font=2,cex=1,xpd=T)
 
 ############################################################################################################################
 ### Classifying environmental factors into abiotic, biotic and multiple factors ############################################
-### Analysis 8: Meta-analysis of the relationship between environmental factors and environmental response effect siezes ###
+### Analysis 8: Meta-analysis of environmental factors and environmental response effect siezes ############################
 ############################################################################################################################
 
 m8<-MCMCglmm(Delta_ES~Env_type,mev = NewES_SL$Var,data=NewES_SL,verbose=F,random=~Article_ID, prior=prior,nitt = 110000,burnin=10000,thin=100)
