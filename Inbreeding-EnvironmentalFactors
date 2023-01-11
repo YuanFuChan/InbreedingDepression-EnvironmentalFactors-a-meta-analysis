@@ -102,7 +102,7 @@ Control<-subset(EnvExp,EnvExp$Env_design=="Control")
 ############################################################################
 ############################################################################
 
-#SECTION 1. Meta-analysis on the affects of environmental factors on inbreeding depression
+#SECTION 1. Meta-analysis of environmental factors and inbreeding depression
 # Bayesian randon effect model will be used with article/paper level as a randon effect
 # Uniform prior on the standard deviation of the random effects, for both residual variance (R structure), and study level variance (G structure)
 
