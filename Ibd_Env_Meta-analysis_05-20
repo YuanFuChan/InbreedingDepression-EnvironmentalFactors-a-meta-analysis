@@ -108,6 +108,12 @@ Control<-subset(EnvExp,EnvExp$Env_design=="Control")
 
 prior <- list(R=list(V = 1e-10, nu = -1), G = list(G1 = list(V = 1e-10, nu = -1)))
 
+pMCMC <- function(data){
+  res <- 2*(min(length(which(data >0)),length(which(data <0))))/length(data)
+  if (res<0.001){res <- "<0.001"}
+  return(as.character(res))
+}
+
 ############################################################################
 ############################################################################
 
